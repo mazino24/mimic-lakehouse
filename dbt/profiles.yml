@@ -1,0 +1,14 @@
+mimic_angina:
+  target: prod
+  outputs:
+    prod:
+      type: postgres
+      host: "{{ env_var('WAREHOUSE_HOST', 'warehouse') }}"
+      port: "{{ env_var('WAREHOUSE_PORT', '5432') | int }}"
+      user: "{{ env_var('WAREHOUSE_USER', 'mimic') }}"
+      password: "{{ env_var('WAREHOUSE_PASSWORD', 'mimic') }}"
+      dbname: "{{ env_var('WAREHOUSE_DB', 'mimic') }}"
+      schema: analytics
+      threads: 4
+      keepalives_idle: 0
+      connect_timeout: 30

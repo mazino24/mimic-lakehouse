@@ -1,0 +1,38 @@
+# Data never goes in git. MIMIC-IV is credentialed: publishing any row of it
+# violates the PhysioNet data use agreement.
+data/
+!data/.gitkeep
+*.csv
+*.parquet
+*.npz
+*.pkl
+*.pt
+
+# Local artifacts
+ml/artifacts/
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+airflow/logs/
+airflow/plugins/__pycache__/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

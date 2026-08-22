@@ -1,0 +1,88 @@
+version: 2
+
+models:
+  - name: dim_patient
+    description: Patient dimension for the study population.
+    columns:
+      - name: subject_id
+        data_tests: [not_null, unique]
+      - name: age_group
+        data_tests:
+          - accepted_values: {values: ['under_45', '45_64', '65_79', '80_plus']}
+      - name: has_angina
+        data_tests:
+          - accepted_values: {values: [0, 1]}
+
+  - name: fct_admission
+    description: Admission-grain fact table with lab activity counts.
+    columns:
+      - name: hadm_id
+        data_tests: [not_null, unique]
+      - name: subject_id
+        data_tests:
+          - not_null
+          - relationships: {to: ref('dim_patient'), field: subject_id}
+      - name: length_of_stay_days
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: 0, inclusive: true}
+      - name: total_lab_measurements
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: 0, inclusive: true}
+
+  - name: fct_lab_result
+    description: One row per admission and lab test.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [hadm_id, lab_itemid]
+    columns:
+      - name: lab_result_key
+        data_tests: [not_null, unique]
+      - name: hadm_id
+        data_tests:
+          - relationships: {to: ref('fct_admission'), field: hadm_id}
+
+  - name: mart_angina_training_features
+    description: >
+      The ML contract table. One row per patient, split assigned by patient
+      hash upstream, NULLs preserved deliberately so imputation happens inside
+      the training fold.
+    columns:
+      - name: hadm_id
+        data_tests: [not_null, unique]
+      - name: subject_id
+        data_tests: [not_null, unique]
+      - name: label
+        data_tests:
+          - not_null
+          - accepted_values: {values: [0, 1]}
+      - name: split
+        data_tests:
+          - not_null
+          - accepted_values: {values: ['train', 'validation', 'test']}
+      - name: age
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range: {min_value: 18, max_value: 120}
+
+  - name: analytics_cohort_summary
+    description: Population characteristics per cohort group and split.
+
+  - name: analytics_lab_profile_by_cohort
+    description: Case-vs-control lab comparison with Cohen's d effect sizes.
+    columns:
+      - name: lab_name
+        data_tests: [not_null]
+
+  - name: analytics_feature_coverage
+    description: Per-feature completeness tiers for the current build.
+    columns:
+      - name: completeness_tier
+        data_tests:
+          - accepted_values:
+              values: ['complete', 'partial', 'sparse', 'mostly_missing']
+
+  - name: analytics_data_quality_history
+    description: Pass rates per table per pipeline run.
+
+  - name: analytics_model_performance
+    description: Model metrics over time, with run-over-run ROC-AUC deltas.

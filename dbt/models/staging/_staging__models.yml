@@ -1,0 +1,43 @@
+version: 2
+
+models:
+  - name: stg_cohort
+    description: Cleaned view of the labelled cohort, one row per patient.
+    columns:
+      - name: subject_id
+        data_tests: [not_null, unique]
+      - name: cohort_group
+        data_tests:
+          - accepted_values: {values: ['angina', 'control']}
+      - name: age_years
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: 18, max_value: 120}
+      - name: length_of_stay_hours
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: 0, inclusive: true}
+
+  - name: stg_lab_features
+    description: Per-admission lab aggregates in long form.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [hadm_id, lab_itemid]
+    columns:
+      - name: measurement_count
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: 1, inclusive: true}
+      - name: aggregation_rule
+        data_tests:
+          - accepted_values: {values: ['first', 'mean']}
+
+  - name: stg_feature_mart
+    description: The modelling table as published by Spark.
+    columns:
+      - name: hadm_id
+        data_tests: [not_null, unique]
+
+  - name: stg_dq_results
+    description: Data-quality check history from the Spark layer.
+    columns:
+      - name: severity
+        data_tests:
+          - accepted_values: {values: ['error', 'warn']}

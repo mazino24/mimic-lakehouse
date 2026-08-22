@@ -1,0 +1,35 @@
+[project]
+name = "mimic-angina-lakehouse"
+version = "1.0.0"
+description = "Spark + Airflow + dbt lakehouse for MIMIC-IV angina prediction"
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+# ml/multimodal is vendored thesis research code, kept verbatim for
+# provenance; it is linted by its own history, not by this project.
+extend-exclude = [".venv", "env", "dbt/target", "dbt/dbt_packages", "ml/multimodal"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "B008",    # FastAPI-style defaults are not relevant here
+    "RUF012",  # mutable class attrs are fine in config dataclasses
+    "RUF001",  # en dashes and arrows in prose are deliberate
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"airflow/dags/*" = ["E402"]        # DAG imports follow Airflow conventions
+"spark/tests/*" = ["E501"]         # fixture rows read better wide
+
+[tool.ruff.lint.isort]
+known-first-party = ["lakehouse"]
+
+[tool.pytest.ini_options]
+testpaths = ["spark/tests"]
+pythonpath = ["spark"]
+filterwarnings = ["ignore::DeprecationWarning"]
+markers = ["slow: end-to-end tests that build a full lake"]

@@ -1,0 +1,18 @@
+[sqlfluff]
+dialect = postgres
+templater = jinja
+max_line_length = 100
+exclude_rules = LT05, ST06, RF01
+
+[sqlfluff:indentation]
+tab_space_size = 4
+indented_joins = false
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:templater:jinja]
+apply_dbt_builtins = true
+
+[sqlfluff:templater:jinja:context]
+target = prod

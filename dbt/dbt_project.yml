@@ -1,0 +1,37 @@
+name: mimic_angina
+version: "1.0.0"
+config-version: 2
+
+profile: mimic_angina
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Cohort guardrails asserted by the singular tests in tests/.
+  min_cohort_rows: 100
+  max_positive_share: 0.80
+  min_positive_share: 0.20
+  # Labs are only features if they were drawn during the stay.
+  max_lab_hours_from_admit: 8760
+
+models:
+  mimic_angina:
+    +materialized: view
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: ephemeral
+    marts:
+      +schema: marts
+      +materialized: table
+    analytics:
+      +schema: analytics
+      +materialized: table

@@ -1,0 +1,66 @@
+version: 2
+
+sources:
+  - name: lake
+    description: >
+      Gold-layer tables published from Spark into Postgres. Nothing writes here
+      except the `publish_warehouse` job, so dbt owns everything downstream.
+    # Env-driven so the project builds against any warehouse name
+    # (docker `mimic`, a CI database, a reviewer's local instance).
+    database: "{{ env_var('WAREHOUSE_DB', 'mimic') }}"
+    schema: lake
+    loaded_at_field: _loaded_at
+    freshness:
+      warn_after: {count: 26, period: hour}
+      error_after: {count: 72, period: hour}
+
+    tables:
+      - name: cohort
+        description: Labelled study population, one row per patient.
+        columns:
+          - name: subject_id
+            description: De-identified patient identifier.
+            data_tests: [not_null, unique]
+          - name: hadm_id
+            description: Hospital admission identifier for the indexed stay.
+            data_tests: [not_null, unique]
+          - name: label
+            description: 1 = angina case (ICD-10 I20*/I251*), 0 = non-cardiac control.
+            data_tests:
+              - not_null
+              - accepted_values: {values: [0, 1]}
+          - name: split
+            data_tests:
+              - not_null
+              - accepted_values: {values: ['train', 'validation', 'test']}
+
+      - name: feature_mart
+        description: One modelling row per admission — cohort joined to lab features.
+        columns:
+          - name: hadm_id
+            data_tests: [not_null, unique]
+          - name: label
+            data_tests: [not_null]
+
+      - name: lab_features
+        description: Per-admission aggregated lab values in long form.
+        columns:
+          - name: hadm_id
+            data_tests: [not_null]
+          - name: aggregation
+            description: Which rule produced feature_value — `first` or `mean`.
+            data_tests:
+              - accepted_values: {values: ['first', 'mean']}
+
+      - name: feature_coverage
+        description: Per-column null rates for the current mart build.
+
+      - name: dq_results
+        description: Append-only history of every Spark-side data-quality check.
+        freshness: null
+
+      - name: model_metrics
+        description: >
+          Evaluation metrics written back by the training DAG. Lives in `lake`
+          rather than `analytics` because dbt owns everything in `analytics`.
+        freshness: null
