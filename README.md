@@ -95,7 +95,7 @@ the repo ships a synthetic data generator that reproduces MIMIC-IV's schemas
 *and its quirks*.
 
 ```bash
-git clone <this-repo> && cd mimic-lakehouse
+git clone https://github.com/mazino24/mimic-lakehouse.git && cd mimic-lakehouse
 make demo
 ```
 
