@@ -21,11 +21,11 @@ Pick three or four; leading with an outcome beats leading with a tool.
 - Orchestrated the platform with **Airflow**: 3 DAGs, 18 tasks, per-stage
   retries with exponential backoff, and **dataset-triggered** downstream
   training so model runs follow data landing rather than a cron guess.
-- Implemented a **data-quality framework** with 25+ declarative expectations
-  enforced inside the Spark jobs; blocking failures fail the DAG, and every
+- Implemented a **data-quality framework** running 45+ declarative expectations per pipeline run
+  inside the Spark jobs; blocking failures fail the DAG, and every
   check is persisted as a time series that surfaces as a warehouse table.
 - Modelled the warehouse in **dbt** — 15 models across staging / intermediate /
-  marts / analytics, validated by **58 tests** including 8 custom SQL tests that
+  marts / analytics, validated by **58 dbt tests** including 8 custom SQL tests that
   encode research invariants (no patient across train/test splits, class
   balance, aggregation-rule integrity).
 - Eliminated **train/test leakage** by moving split assignment upstream into the

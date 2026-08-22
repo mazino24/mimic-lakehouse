@@ -144,7 +144,7 @@ Cases, controls, features, and the split — all decided once, in one place:
 
 ### 4. Warehouse + dbt
 Gold lands in Postgres via JDBC; dbt builds staging → intermediate → marts →
-analytics. **31 dbt tests** — schema tests plus 8 singular tests that encode
+analytics. **58 dbt tests** — schema tests plus 8 singular tests that encode
 research invariants (no patient across splits, class balance intact, the
 aggregation rule survived the trip through Parquet and JDBC).
 
@@ -195,15 +195,22 @@ conflicting schemas. There is a test for that now.
 
 ## Results
 
-Trained on the synthetic demo extract (3,000 patients → 2,714-patient cohort,
-36 features), all metrics on the held-out test split:
+Trained on the synthetic demo extract — 3,000 patients in, a 2,714-patient
+cohort out, 22 numeric features on the contract table. All metrics are on the
+held-out test split (421 patients), which the pipeline assigned by patient hash
+long before training ran:
 
 | Model | ROC-AUC | F1 | Recall |
 | --- | --- | --- | --- |
-| XGBoost | 0.865 | 0.772 | 0.766 |
-| Logistic regression | 0.862 | 0.775 | 0.781 |
-| Random forest | 0.857 | 0.776 | 0.776 |
-| Gradient boosting | 0.857 | 0.754 | 0.746 |
+| XGBoost | 0.865 | 0.783 | 0.776 |
+| Logistic regression | 0.863 | 0.774 | 0.776 |
+| Random forest | 0.854 | 0.751 | 0.742 |
+| Gradient boosting | 0.853 | 0.752 | 0.746 |
+
+The case/control separation is clinically coherent — the largest effect size in
+`analytics_lab_profile_by_cohort` is Troponin T (Cohen's *d* = 1.01), followed
+by creatinine and CK-MB, which is what a cardiology reviewer would expect to
+see before trusting any classifier built on top.
 
 On the **real MIMIC-IV extract** (58,486 admissions, 34 features) the same
 downstream models reach **ROC-AUC 0.797 / F1 0.742** — the thesis result. The
