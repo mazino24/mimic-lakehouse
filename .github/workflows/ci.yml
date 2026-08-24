@@ -69,6 +69,9 @@ jobs:
       WAREHOUSE_USER: mimic
       WAREHOUSE_PASSWORD: mimic
       LAKE_ROOT: /tmp/lake
+      # A bare `pip install pyspark` ships no JDBC driver; the Docker images
+      # bake it in, so this is only needed for the CI runner.
+      SPARK_JARS_PACKAGES: org.postgresql:postgresql:42.7.3
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

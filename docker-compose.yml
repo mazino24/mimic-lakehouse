@@ -104,22 +104,26 @@ services:
       retries: 20
 
   # ── Spark standalone cluster ──────────────────────────────────────────────
+  # The official Apache image has no SPARK_MODE switch, so the standalone
+  # daemons are started explicitly in the foreground via spark-class.
   spark-master:
     build:
       context: .
       dockerfile: docker/spark.Dockerfile
     image: mimic-lakehouse/spark:1.0.0
-    environment:
-      SPARK_MODE: master
-      SPARK_RPC_AUTHENTICATION_ENABLED: "no"
-      SPARK_RPC_ENCRYPTION_ENABLED: "no"
-      SPARK_SSL_ENABLED: "no"
+    entrypoint: ["/opt/spark/bin/spark-class"]
+    command: ["org.apache.spark.deploy.master.Master", "--host", "spark-master"]
     ports:
       - "7077:7077"
       - "8081:8080"   # Spark master UI
     volumes:
       - ./spark:/opt/spark-apps
       - ./data:/opt/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   spark-worker:
     build:
@@ -127,14 +131,16 @@ services:
       dockerfile: docker/spark.Dockerfile
     image: mimic-lakehouse/spark:1.0.0
     depends_on:
-      - spark-master
-    environment:
-      SPARK_MODE: worker
-      SPARK_MASTER_URL: spark://spark-master:7077
-      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY:-4G}
-      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES:-2}
-      SPARK_RPC_AUTHENTICATION_ENABLED: "no"
-      SPARK_SSL_ENABLED: "no"
+      spark-master:
+        condition: service_healthy
+    entrypoint: ["/opt/spark/bin/spark-class"]
+    command:
+      - "org.apache.spark.deploy.worker.Worker"
+      - "spark://spark-master:7077"
+      - "--cores"
+      - "${SPARK_WORKER_CORES:-2}"
+      - "--memory"
+      - "${SPARK_WORKER_MEMORY:-4G}"
     deploy:
       replicas: ${SPARK_WORKERS:-2}
     volumes:

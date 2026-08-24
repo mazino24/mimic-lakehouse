@@ -55,6 +55,14 @@ def build_session(
     if partitions:
         builder = builder.config("spark.sql.shuffle.partitions", str(partitions))
 
+    # Maven coordinates for jars that are not already on the classpath. The
+    # Docker images bake the Postgres driver in, but a bare `pip install
+    # pyspark` (CI, a laptop) has no JDBC driver at all and fails with
+    # ClassNotFoundException the moment a job writes to the warehouse.
+    packages = os.getenv("SPARK_JARS_PACKAGES", "")
+    if packages:
+        builder = builder.config("spark.jars.packages", packages)
+
     if s3.enabled:
         builder = (
             builder.config("spark.hadoop.fs.s3a.endpoint", s3.endpoint)
