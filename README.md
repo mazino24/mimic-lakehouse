@@ -1,5 +1,7 @@
 # MIMIC-IV Angina Lakehouse
 
+[![CI](https://github.com/mazino24/mimic-lakehouse/actions/workflows/ci.yml/badge.svg)](https://github.com/mazino24/mimic-lakehouse/actions/workflows/ci.yml)
+
 A production-shaped data platform that turns **41 GB of raw hospital records**
 into a governed, tested feature warehouse — and a clinical ML model as its
 first consumer.
